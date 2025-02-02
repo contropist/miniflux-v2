@@ -1,5 +1,7 @@
-miniflux-*
-miniflux
-*.rpm
-*.deb
+./*.sha256
+./miniflux
 .idea
+.vscode
+*.deb
+*.rpm
+miniflux-*

@@ -1,8 +1,7 @@
-// Copyright 2018 Frédéric Guillot. All rights reserved.
-// Use of this source code is governed by the Apache 2.0
-// license that can be found in the LICENSE file.
+// SPDX-FileCopyrightText: Copyright The Miniflux Authors. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
 
-package client // import "miniflux.app/client"
+package client // import "miniflux.app/v2/client"
 
 import (
 	"fmt"
@@ -28,19 +27,25 @@ type User struct {
 	EntryDirection         string     `json:"entry_sorting_direction"`
 	EntryOrder             string     `json:"entry_sorting_order"`
 	Stylesheet             string     `json:"stylesheet"`
+	CustomJS               string     `json:"custom_js"`
 	GoogleID               string     `json:"google_id"`
 	OpenIDConnectID        string     `json:"openid_connect_id"`
 	EntriesPerPage         int        `json:"entries_per_page"`
 	KeyboardShortcuts      bool       `json:"keyboard_shortcuts"`
 	ShowReadingTime        bool       `json:"show_reading_time"`
 	EntrySwipe             bool       `json:"entry_swipe"`
-	DoubleTap              bool       `json:"double_tap"`
+	GestureNav             string     `json:"gesture_nav"`
 	LastLoginAt            *time.Time `json:"last_login_at"`
 	DisplayMode            string     `json:"display_mode"`
 	DefaultReadingSpeed    int        `json:"default_reading_speed"`
 	CJKReadingSpeed        int        `json:"cjk_reading_speed"`
 	DefaultHomePage        string     `json:"default_home_page"`
 	CategoriesSortingOrder string     `json:"categories_sorting_order"`
+	MarkReadOnView         bool       `json:"mark_read_on_view"`
+	MediaPlaybackRate      float64    `json:"media_playback_rate"`
+	BlockFilterEntryRules  string     `json:"block_filter_entry_rules"`
+	KeepFilterEntryRules   string     `json:"keep_filter_entry_rules"`
+	ExternalFontHosts      string     `json:"external_font_hosts"`
 }
 
 func (u User) String() string {
@@ -58,27 +63,33 @@ type UserCreationRequest struct {
 
 // UserModificationRequest represents the request to update a user.
 type UserModificationRequest struct {
-	Username               *string `json:"username"`
-	Password               *string `json:"password"`
-	IsAdmin                *bool   `json:"is_admin"`
-	Theme                  *string `json:"theme"`
-	Language               *string `json:"language"`
-	Timezone               *string `json:"timezone"`
-	EntryDirection         *string `json:"entry_sorting_direction"`
-	EntryOrder             *string `json:"entry_sorting_order"`
-	Stylesheet             *string `json:"stylesheet"`
-	GoogleID               *string `json:"google_id"`
-	OpenIDConnectID        *string `json:"openid_connect_id"`
-	EntriesPerPage         *int    `json:"entries_per_page"`
-	KeyboardShortcuts      *bool   `json:"keyboard_shortcuts"`
-	ShowReadingTime        *bool   `json:"show_reading_time"`
-	EntrySwipe             *bool   `json:"entry_swipe"`
-	DoubleTap              *bool   `json:"double_tap"`
-	DisplayMode            *string `json:"display_mode"`
-	DefaultReadingSpeed    *int    `json:"default_reading_speed"`
-	CJKReadingSpeed        *int    `json:"cjk_reading_speed"`
-	DefaultHomePage        *string `json:"default_home_page"`
-	CategoriesSortingOrder *string `json:"categories_sorting_order"`
+	Username               *string  `json:"username"`
+	Password               *string  `json:"password"`
+	IsAdmin                *bool    `json:"is_admin"`
+	Theme                  *string  `json:"theme"`
+	Language               *string  `json:"language"`
+	Timezone               *string  `json:"timezone"`
+	EntryDirection         *string  `json:"entry_sorting_direction"`
+	EntryOrder             *string  `json:"entry_sorting_order"`
+	Stylesheet             *string  `json:"stylesheet"`
+	CustomJS               *string  `json:"custom_js"`
+	GoogleID               *string  `json:"google_id"`
+	OpenIDConnectID        *string  `json:"openid_connect_id"`
+	EntriesPerPage         *int     `json:"entries_per_page"`
+	KeyboardShortcuts      *bool    `json:"keyboard_shortcuts"`
+	ShowReadingTime        *bool    `json:"show_reading_time"`
+	EntrySwipe             *bool    `json:"entry_swipe"`
+	GestureNav             *string  `json:"gesture_nav"`
+	DisplayMode            *string  `json:"display_mode"`
+	DefaultReadingSpeed    *int     `json:"default_reading_speed"`
+	CJKReadingSpeed        *int     `json:"cjk_reading_speed"`
+	DefaultHomePage        *string  `json:"default_home_page"`
+	CategoriesSortingOrder *string  `json:"categories_sorting_order"`
+	MarkReadOnView         *bool    `json:"mark_read_on_view"`
+	MediaPlaybackRate      *float64 `json:"media_playback_rate"`
+	BlockFilterEntryRules  *string  `json:"block_filter_entry_rules"`
+	KeepFilterEntryRules   *string  `json:"keep_filter_entry_rules"`
+	ExternalFontHosts      *string  `json:"external_font_hosts"`
 }
 
 // Users represents a list of users.
@@ -106,7 +117,7 @@ type Subscription struct {
 }
 
 func (s Subscription) String() string {
-	return fmt.Sprintf(`Title="%s", URL="%s", Type="%s"`, s.Title, s.URL, s.Type)
+	return fmt.Sprintf(`Title=%q, URL=%q, Type=%q`, s.Title, s.URL, s.Type)
 }
 
 // Subscriptions represents a list of subscriptions.
@@ -139,6 +150,7 @@ type Feed struct {
 	Password                    string    `json:"password"`
 	Category                    *Category `json:"category,omitempty"`
 	HideGlobally                bool      `json:"hide_globally"`
+	DisableHTTP2                bool      `json:"disable_http2"`
 }
 
 // FeedCreationRequest represents the request to create a feed.
@@ -159,6 +171,7 @@ type FeedCreationRequest struct {
 	BlocklistRules              string `json:"blocklist_rules"`
 	KeeplistRules               string `json:"keeplist_rules"`
 	HideGlobally                bool   `json:"hide_globally"`
+	DisableHTTP2                bool   `json:"disable_http2"`
 }
 
 // FeedModificationRequest represents the request to update a feed.
@@ -181,6 +194,7 @@ type FeedModificationRequest struct {
 	AllowSelfSignedCertificates *bool   `json:"allow_self_signed_certificates"`
 	FetchViaProxy               *bool   `json:"fetch_via_proxy"`
 	HideGlobally                *bool   `json:"hide_globally"`
+	DisableHTTP2                *bool   `json:"disable_http2"`
 }
 
 // FeedIcon represents the feed icon.
@@ -201,23 +215,30 @@ type Feeds []*Feed
 // Entry represents a subscription item in the system.
 type Entry struct {
 	ID          int64      `json:"id"`
-	UserID      int64      `json:"user_id"`
-	FeedID      int64      `json:"feed_id"`
-	Status      string     `json:"status"`
+	Date        time.Time  `json:"published_at"`
+	ChangedAt   time.Time  `json:"changed_at"`
+	CreatedAt   time.Time  `json:"created_at"`
+	Feed        *Feed      `json:"feed,omitempty"`
 	Hash        string     `json:"hash"`
-	Title       string     `json:"title"`
 	URL         string     `json:"url"`
 	CommentsURL string     `json:"comments_url"`
-	Date        time.Time  `json:"published_at"`
-	CreatedAt   time.Time  `json:"created_at"`
-	ChangedAt   time.Time  `json:"changed_at"`
+	Title       string     `json:"title"`
+	Status      string     `json:"status"`
 	Content     string     `json:"content"`
 	Author      string     `json:"author"`
 	ShareCode   string     `json:"share_code"`
-	Starred     bool       `json:"starred"`
-	ReadingTime int        `json:"reading_time"`
 	Enclosures  Enclosures `json:"enclosures,omitempty"`
-	Feed        *Feed      `json:"feed,omitempty"`
+	Tags        []string   `json:"tags"`
+	ReadingTime int        `json:"reading_time"`
+	UserID      int64      `json:"user_id"`
+	FeedID      int64      `json:"feed_id"`
+	Starred     bool       `json:"starred"`
+}
+
+// EntryModificationRequest represents a request to modify an entry.
+type EntryModificationRequest struct {
+	Title   *string `json:"title"`
+	Content *string `json:"content"`
 }
 
 // Entries represents a list of entries.
@@ -225,12 +246,17 @@ type Entries []*Entry
 
 // Enclosure represents an attachment.
 type Enclosure struct {
-	ID       int64  `json:"id"`
-	UserID   int64  `json:"user_id"`
-	EntryID  int64  `json:"entry_id"`
-	URL      string `json:"url"`
-	MimeType string `json:"mime_type"`
-	Size     int    `json:"size"`
+	ID               int64  `json:"id"`
+	UserID           int64  `json:"user_id"`
+	EntryID          int64  `json:"entry_id"`
+	URL              string `json:"url"`
+	MimeType         string `json:"mime_type"`
+	Size             int    `json:"size"`
+	MediaProgression int64  `json:"media_progression"`
+}
+
+type EnclosureUpdateRequest struct {
+	MediaProgression int64 `json:"media_progression"`
 }
 
 // Enclosures represents a list of attachments.
@@ -243,24 +269,44 @@ const (
 
 // Filter is used to filter entries.
 type Filter struct {
-	Status        string
-	Offset        int
-	Limit         int
-	Order         string
-	Direction     string
-	Starred       string
-	Before        int64
-	After         int64
-	BeforeEntryID int64
-	AfterEntryID  int64
-	Search        string
-	CategoryID    int64
-	FeedID        int64
-	Statuses      []string
+	Status          string
+	Offset          int
+	Limit           int
+	Order           string
+	Direction       string
+	Starred         string
+	Before          int64
+	After           int64
+	PublishedBefore int64
+	PublishedAfter  int64
+	ChangedBefore   int64
+	ChangedAfter    int64
+	BeforeEntryID   int64
+	AfterEntryID    int64
+	Search          string
+	CategoryID      int64
+	FeedID          int64
+	Statuses        []string
+	GloballyVisible bool
 }
 
 // EntryResultSet represents the response when fetching entries.
 type EntryResultSet struct {
 	Total   int     `json:"total"`
 	Entries Entries `json:"entries"`
+}
+
+// VersionResponse represents the version and the build information of the Miniflux instance.
+type VersionResponse struct {
+	Version   string `json:"version"`
+	Commit    string `json:"commit"`
+	BuildDate string `json:"build_date"`
+	GoVersion string `json:"go_version"`
+	Compiler  string `json:"compiler"`
+	Arch      string `json:"arch"`
+	OS        string `json:"os"`
+}
+
+func SetOptionalField[T any](value T) *T {
+	return &value
 }

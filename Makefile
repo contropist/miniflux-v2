@@ -1,17 +1,18 @@
-APP          := miniflux
-DOCKER_IMAGE := miniflux/miniflux
-VERSION      := $(shell git describe --tags --abbrev=0)
-COMMIT       := $(shell git rev-parse --short HEAD)
-BUILD_DATE   := `date +%FT%T%z`
-LD_FLAGS     := "-s -w -X 'miniflux.app/version.Version=$(VERSION)' -X 'miniflux.app/version.Commit=$(COMMIT)' -X 'miniflux.app/version.BuildDate=$(BUILD_DATE)'"
-PKG_LIST     := $(shell go list ./... | grep -v /vendor/)
-DB_URL       := postgres://postgres:postgres@localhost/miniflux_test?sslmode=disable
-DEB_IMG_ARCH := amd64
+APP             := miniflux
+DOCKER_IMAGE    := miniflux/miniflux
+VERSION         := $(shell git describe --tags --abbrev=0 2>/dev/null)
+COMMIT          := $(shell git rev-parse --short HEAD 2>/dev/null)
+BUILD_DATE      := `date +%FT%T%z`
+LD_FLAGS        := "-s -w -X 'miniflux.app/v2/internal/version.Version=$(VERSION)' -X 'miniflux.app/v2/internal/version.Commit=$(COMMIT)' -X 'miniflux.app/v2/internal/version.BuildDate=$(BUILD_DATE)'"
+PKG_LIST        := $(shell go list ./... | grep -v /vendor/)
+DB_URL          := postgres://postgres:postgres@localhost/miniflux_test?sslmode=disable
+DOCKER_PLATFORM := amd64
 
 export PGPASSWORD := postgres
 
 .PHONY: \
 	miniflux \
+	miniflux-no-pie \
 	linux-amd64 \
 	linux-arm64 \
 	linux-armv7 \
@@ -45,68 +46,83 @@ export PGPASSWORD := postgres
 miniflux:
 	@ go build -buildmode=pie -ldflags=$(LD_FLAGS) -o $(APP) main.go
 
+miniflux-no-pie:
+	@ go build -ldflags=$(LD_FLAGS) -o $(APP) main.go
+
 linux-amd64:
-	@ GOOS=linux GOARCH=amd64 go build -ldflags=$(LD_FLAGS) -o $(APP)-$@ main.go
+	@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags=$(LD_FLAGS) -o $(APP)-$@ main.go
+	@ sha256sum $(APP)-$@ > $(APP)-$@.sha256
 
 linux-arm64:
-	@ GOOS=linux GOARCH=arm64 go build -ldflags=$(LD_FLAGS) -o $(APP)-$@ main.go
+	@ CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags=$(LD_FLAGS) -o $(APP)-$@ main.go
+	@ sha256sum $(APP)-$@ > $(APP)-$@.sha256
 
 linux-armv7:
-	@ GOOS=linux GOARCH=arm GOARM=7 go build -ldflags=$(LD_FLAGS) -o $(APP)-$@ main.go
+	@ CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -ldflags=$(LD_FLAGS) -o $(APP)-$@ main.go
+	@ sha256sum $(APP)-$@ > $(APP)-$@.sha256
 
 linux-armv6:
-	@ GOOS=linux GOARCH=arm GOARM=6 go build -ldflags=$(LD_FLAGS) -o $(APP)-$@ main.go
+	@ CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=6 go build -ldflags=$(LD_FLAGS) -o $(APP)-$@ main.go
+	@ sha256sum $(APP)-$@ > $(APP)-$@.sha256
 
 linux-armv5:
-	@ GOOS=linux GOARCH=arm GOARM=5 go build -ldflags=$(LD_FLAGS) -o $(APP)-$@ main.go
+	@ CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=5 go build -ldflags=$(LD_FLAGS) -o $(APP)-$@ main.go
+	@ sha256sum $(APP)-$@ > $(APP)-$@.sha256
 
 darwin-amd64:
 	@ GOOS=darwin GOARCH=amd64 go build -ldflags=$(LD_FLAGS) -o $(APP)-$@ main.go
+	@ sha256sum $(APP)-$@ > $(APP)-$@.sha256
 
 darwin-arm64:
 	@ GOOS=darwin GOARCH=arm64 go build -ldflags=$(LD_FLAGS) -o $(APP)-$@ main.go
+	@ sha256sum $(APP)-$@ > $(APP)-$@.sha256
 
 freebsd-amd64:
-	@ GOOS=freebsd GOARCH=amd64 go build -ldflags=$(LD_FLAGS) -o $(APP)-$@ main.go
+	@ CGO_ENABLED=0 GOOS=freebsd GOARCH=amd64 go build -ldflags=$(LD_FLAGS) -o $(APP)-$@ main.go
+	@ sha256sum $(APP)-$@ > $(APP)-$@.sha256
 
 openbsd-amd64:
 	@ GOOS=openbsd GOARCH=amd64 go build -ldflags=$(LD_FLAGS) -o $(APP)-$@ main.go
+	@ sha256sum $(APP)-$@ > $(APP)-$@.sha256
 
 windows-amd64:
-	@ GOOS=windows GOARCH=amd64 go build -ldflags=$(LD_FLAGS) -o $(APP)-$@ main.go
+	@ GOOS=windows GOARCH=amd64 go build -ldflags=$(LD_FLAGS) -o $(APP)-$@.exe main.go
+	@ sha256sum $(APP)-$@.exe > $(APP)-$@.exe.sha256
 
 build: linux-amd64 linux-arm64 linux-armv7 linux-armv6 linux-armv5 darwin-amd64 darwin-arm64 freebsd-amd64 openbsd-amd64 windows-amd64
 
 # NOTE: unsupported targets
 netbsd-amd64:
-	@ GOOS=netbsd GOARCH=amd64 go build -ldflags=$(LD_FLAGS) -o $(APP)-$@ main.go
+	@ CGO_ENABLED=0 GOOS=netbsd GOARCH=amd64 go build -ldflags=$(LD_FLAGS) -o $(APP)-$@ main.go
 
 linux-x86:
-	@ GOOS=linux GOARCH=386 go build -ldflags=$(LD_FLAGS) -o $(APP)-$@ main.go
+	@ CGO_ENABLED=0 GOOS=linux GOARCH=386 go build -ldflags=$(LD_FLAGS) -o $(APP)-$@ main.go
 
 freebsd-x86:
-	@ GOOS=freebsd GOARCH=386 go build -ldflags=$(LD_FLAGS) -o $(APP)-$@ main.go
+	@ CGO_ENABLED=0 GOOS=freebsd GOARCH=386 go build -ldflags=$(LD_FLAGS) -o $(APP)-$@ main.go
 
 netbsd-x86:
-	@ GOOS=netbsd GOARCH=386 go build -ldflags=$(LD_FLAGS) -o $(APP)-$@ main.go
+	@ CGO_ENABLED=0 GOOS=netbsd GOARCH=386 go build -ldflags=$(LD_FLAGS) -o $(APP)-$@ main.go
 
 openbsd-x86:
 	@ GOOS=openbsd GOARCH=386 go build -ldflags=$(LD_FLAGS) -o $(APP)-$@ main.go
 
 windows-x86:
-	@ GOOS=windows GOARCH=386 go build -ldflags=$(LD_FLAGS) -o $(APP)-$@ main.go
+	@ GOOS=windows GOARCH=386 go build -ldflags=$(LD_FLAGS) -o $(APP)-$@.exe main.go
 
 run:
-	@ LOG_DATE_TIME=1 DEBUG=1 RUN_MIGRATIONS=1 go run main.go
+	@ LOG_DATE_TIME=1 LOG_LEVEL=debug RUN_MIGRATIONS=1 CREATE_ADMIN=1 ADMIN_USERNAME=admin ADMIN_PASSWORD=test123 go run main.go
 
 clean:
-	@ rm -f $(APP)-* $(APP) $(APP)*.rpm $(APP)*.deb
+	@ rm -f $(APP)-* $(APP) $(APP)*.rpm $(APP)*.deb $(APP)*.exe $(APP)*.sha256
 
 test:
 	go test -cover -race -count=1 ./...
 
 lint:
-	golint -set_exit_status ${PKG_LIST}
+	go vet ./...
+	staticcheck ./...
+	golangci-lint run --disable errcheck --enable sqlclosecheck --enable misspell --enable gofmt --enable goimports --enable whitespace
 
 integration-test:
 	psql -U postgres -c 'drop database if exists miniflux_test;'
@@ -120,9 +136,13 @@ integration-test:
 	RUN_MIGRATIONS=1 \
 	DEBUG=1 \
 	./miniflux-test >/tmp/miniflux.log 2>&1 & echo "$$!" > "/tmp/miniflux.pid"
-	
+
 	while ! nc -z localhost 8080; do sleep 1; done
-	go test -v -tags=integration -count=1 miniflux.app/tests
+
+	TEST_MINIFLUX_BASE_URL=http://127.0.0.1:8080 \
+	TEST_MINIFLUX_ADMIN_USERNAME=admin \
+	TEST_MINIFLUX_ADMIN_PASSWORD=test123 \
+	go test -v -count=1 ./internal/api
 
 clean-integration-test:
 	@ kill -9 `cat /tmp/miniflux.pid`
@@ -131,7 +151,7 @@ clean-integration-test:
 	@ psql -U postgres -c 'drop database if exists miniflux_test;'
 
 docker-image:
-	docker build -t $(DOCKER_IMAGE):$(VERSION) -f packaging/docker/alpine/Dockerfile .
+	docker build --pull -t $(DOCKER_IMAGE):$(VERSION) -f packaging/docker/alpine/Dockerfile .
 
 docker-image-distroless:
 	docker build -t $(DOCKER_IMAGE):$(VERSION) -f packaging/docker/distroless/Dockerfile .
@@ -153,15 +173,15 @@ rpm: clean
 		rpmbuild -bb --define "_miniflux_version $(VERSION)" /root/rpmbuild/SPECS/miniflux.spec
 
 debian:
-	@ docker build --load \
-		--build-arg BASE_IMAGE_ARCH=$(DEB_IMG_ARCH) \
-		-t $(DEB_IMG_ARCH)/miniflux-deb-builder \
+	@ docker buildx build --load \
+		--platform linux/$(DOCKER_PLATFORM) \
+		-t miniflux-deb-builder \
 		-f packaging/debian/Dockerfile \
 		.
-	@ docker run --rm \
-		-v ${PWD}:/pkg $(DEB_IMG_ARCH)/miniflux-deb-builder
+	@ docker run --rm --platform linux/$(DOCKER_PLATFORM) \
+		-v ${PWD}:/pkg miniflux-deb-builder
 
 debian-packages: clean
-	$(MAKE) debian DEB_IMG_ARCH=amd64
-	$(MAKE) debian DEB_IMG_ARCH=arm64v8
-	$(MAKE) debian DEB_IMG_ARCH=arm32v7
+	$(MAKE) debian DOCKER_PLATFORM=amd64
+	$(MAKE) debian DOCKER_PLATFORM=arm64
+	$(MAKE) debian DOCKER_PLATFORM=arm/v7

@@ -1,0 +1,87 @@
+{{ define "title"}}{{ t "page.categories.title" }} ({{ .total }}){{ end }}
+
+{{ define "page_header"}}
+<section class="page-header" aria-labelledby="page-header-title page-header-title-count">
+    <h1 id="page-header-title" dir="auto">
+        {{ t "page.categories.title" }}
+        <span aria-hidden="true"> ({{ .total }})</span>
+    </h1>
+    <span id="page-header-title-count" class="sr-only">{{ plural "page.categories_count" .total .total }}</span>
+    <nav aria-label="{{ t "page.categories.title" }} {{ t "menu.title" }}">
+        <ul>
+            <li>
+                <a href="{{ route "createCategory" }}">{{ icon "add-category" }}{{ t "menu.create_category" }}</a>
+            </li>
+        </ul>
+    </nav>
+</section>
+{{ end }}
+
+{{ define "content"}}
+{{ if not .categories }}
+    <p role="alert" class="alert alert-error">{{ t "alert.no_category" }}</p>
+{{ else }}
+    <div class="items">
+        {{ range .categories }}
+        <article
+            class="item category-item {{if gt (deRef .TotalUnread) 0 }} category-has-unread{{end}}"
+            aria-labelledby="category-title-{{ .ID }}"
+            tabindex="-1"
+        >
+            <header id="category-title-{{ .ID }}"  class="item-header" dir="auto">
+                <h2 class="item-title">
+                    <a href="{{ route "categoryEntries" "categoryID" .ID }}">
+                        {{ .Title }}
+                        <span class="category-item-total" aria-hidden="true">({{ .TotalUnread }})</span>
+                        <span class="sr-only">{{ plural "page.unread_entry_count" (deRef .TotalUnread) (deRef .TotalUnread) }}</span>
+                    </a>
+                </h2>
+            </header>
+            <div class="item-meta">
+                <ul class="item-meta-info">
+                    <li class="item-meta-info-feed-count">
+                        {{ if eq (deRef .FeedCount) 0 }}{{ t "page.categories.no_feed" }}{{ else }}{{ plural "page.categories.feed_count" (deRef .FeedCount) (deRef .FeedCount) }}{{ end }}
+                    </li>
+                </ul>
+                <ul class="item-meta-icons">
+                    <li class="item-meta-icons-entries">
+                        <a href="{{ route "categoryEntries" "categoryID" .ID }}">{{ icon "entries" }}<span class="icon-label">{{ t "page.categories.entries" }}</span></a>
+                    </li>
+                    <li class="item-meta-icons-feeds">
+                        <a href="{{ route "categoryFeeds" "categoryID" .ID }}">{{ icon "feeds" }}<span class="icon-label">{{ t "page.categories.feeds" }}</span></a>
+                    </li>
+                    <li class="item-meta-icons-edit">
+                        <a href="{{ route "editCategory" "categoryID" .ID }}">{{ icon "edit" }}<span class="icon-label">{{ t "menu.edit_category" }}</span></a>
+                    </li>
+                    {{ if eq (deRef .FeedCount) 0 }}
+                    <li class="item-meta-icons-delete">
+                        <button
+                            aria-describedby="category-title-{{ .ID }}"
+                            data-confirm="true"
+                            data-label-question="{{ t "confirm.question" }}"
+                            data-label-yes="{{ t "confirm.yes" }}"
+                            data-label-no="{{ t "confirm.no" }}"
+                            data-label-loading="{{ t "confirm.loading" }}"
+                            data-url="{{ route "removeCategory" "categoryID" .ID }}">{{ icon "delete" }}<span class="icon-label">{{ t "action.remove" }}</span></button>
+                    </li>
+                    {{ end }}
+                    {{ if gt (deRef .TotalUnread) 0 }}
+                      <li class="item-meta-icons-mark-as-read">
+                        <button
+                            aria-describedby="category-title-{{ .ID }}"
+                            data-confirm="true"
+                            data-label-question="{{ t "confirm.question" }}"
+                            data-label-yes="{{ t "confirm.yes" }}"
+                            data-label-no="{{ t "confirm.no" }}"
+                            data-label-loading="{{ t "confirm.loading" }}"
+                            data-url="{{ route "markCategoryAsRead" "categoryID" .ID }}">{{ icon "read" }}<span class="icon-label">{{ t "menu.mark_all_as_read" }}</span></button>
+                      </li>
+                    {{ end }}
+                </ul>
+            </div>
+        </article>
+        {{ end }}
+    </div>
+{{ end }}
+
+{{ end }}

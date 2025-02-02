@@ -1,0 +1,17 @@
+{{ define "title"}}{{ t "page.feeds.title" }} ({{ .total }}){{ end }}
+
+{{ define "page_header"}}
+<section class="page-header" aria-labelledby="page-header-title">
+    <h1 id="page-header-title">{{ t "page.feeds.title" }} ({{ .total }})</h1>
+    {{ template "feed_menu" }}
+</section>
+{{ end }}
+
+{{ define "content"}}
+{{ if not .feeds }}
+    <p role="alert" class="alert">{{ t "alert.no_feed" }}</p>
+{{ else }}
+    {{ template "feed_list" dict "user" .user "feeds" .feeds "ParsingErrorCount" .ParsingErrorCount }}
+{{ end }}
+
+{{ end }}

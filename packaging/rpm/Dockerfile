@@ -1,12 +1,11 @@
 FROM golang:1 AS build
+ENV CGO_ENABLED=0
 ADD . /go/src/app
 WORKDIR /go/src/app
 RUN make miniflux
 
-FROM centos:8
-RUN dnf --disablerepo '*' --enablerepo=extras swap centos-linux-repos centos-stream-repos -y
-RUN dnf distro-sync -y
-RUN dnf install -y rpm-build
+FROM rockylinux:9
+RUN dnf install --setopt=install_weak_deps=False -y rpm-build systemd-rpm-macros
 RUN mkdir -p /root/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
 RUN echo "%_topdir /root/rpmbuild" >> .rpmmacros
 COPY --from=build /go/src/app/miniflux /root/rpmbuild/SOURCES/miniflux

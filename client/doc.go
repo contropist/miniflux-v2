@@ -1,6 +1,5 @@
-// Copyright 2018 Frédéric Guillot. All rights reserved.
-// Use of this source code is governed by the Apache 2.0
-// license that can be found in the LICENSE file.
+// SPDX-FileCopyrightText: Copyright The Miniflux Authors. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 /*
 Package client implements a client library for the Miniflux REST API.
@@ -10,10 +9,10 @@ Package client implements a client library for the Miniflux REST API.
 This code snippet fetch the list of users:
 
 	import (
-		miniflux "miniflux.app/client"
+		miniflux "miniflux.app/v2/client"
 	)
 
-	client := miniflux.New("https://api.example.org", "admin", "secret")
+	client := miniflux.NewClient("https://api.example.org", "admin", "secret")
 	users, err := client.Users()
 	if err != nil {
 		fmt.Println(err)
@@ -30,4 +29,4 @@ This one discover subscriptions on a website:
 	}
 	fmt.Println(subscriptions)
 */
-package client // import "miniflux.app/client"
+package client // import "miniflux.app/v2/client"
